@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description 
+    run-as="external"
+    xmlns:x="http://www.jenitennison.com/xslt/xspec"
+    xmlns:dc="urn:datacraft"
+    stylesheet="test-harness.xsl"> 
+    
+    <!-- 
+        https://github.com/xspec/xspec/wiki
+        
+        Use test harness to mock up SaxonJS functions not recognized by XSpec
+        
+        https://www.balisage.net/Proceedings/vol25/print/Galtman01/BalisageVol25-Galtman01.html
+    -->
+    
+    <x:scenario label="Parsing plain text">
+        <x:scenario label="Simple tree">
+            <x:call function="dc:parse-text-tree">
+                <x:param name="text-tree">[S 
+                    [NP This] 
+                    [VP 
+                        [V is]
+                        [^NP a wug]
+                    ]
+                ]
+                </x:param>
+            </x:call>
+            <x:expect label="The root element is dc:expression" select="$x:result[self::dc:expression]"/>
+            <x:expect label="Specific result">
+                <dc:expression>
+                    <dc:category>S</dc:category>
+                    <dc:values>
+                        <dc:expression>
+                            <dc:category>NP</dc:category>
+                            <dc:values>
+                                <dc:value>This</dc:value>
+                            </dc:values>
+                        </dc:expression>
+                        <dc:expression>
+                            <dc:category>VP</dc:category>
+                            <dc:values>
+                                <dc:expression>
+                                    <dc:category>V</dc:category>
+                                    <dc:values>
+                                        <dc:value>is</dc:value>
+                                    </dc:values>
+                                </dc:expression>
+                                <dc:expression>
+                                    <dc:category triangle="yes">NP</dc:category>
+                                    <dc:values>
+                                        <dc:value>a wug</dc:value>
+                                    </dc:values>
+                                </dc:expression>
+                            </dc:values>
+                        </dc:expression>
+                    </dc:values>
+                </dc:expression>
+            </x:expect>
+        </x:scenario>
+    </x:scenario>
+
+</x:description>

@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>Create syntax tree diagram</title>
+        <style type="text/css">
+            body {
+                background-color: #fff4e6;
+            }
+            
+            #options {
+                background-color: #fff8f0;
+                border: 2px solid #fabf73;
+                float: right;
+                padding: 0.5em;
+            }
+            
+            #options h2 {
+                background-color: #fff8f0;
+                color: #3d270b;
+                font-family: sans-serif;
+                font-size: 1.2em;
+                margin-top: 0.5em;
+                margin-bottom: 0.5em;
+            }
+            
+            #options > div {
+                border-top: 1px solid #fabf73;
+                margin-top: 1em;
+            }
+            
+            #submit, #download {
+                font-size: large;
+            }
+            
+            button.active {
+                background-color: #fce1bd
+            }
+            
+            #header {
+                background-color: #fce1bd;
+                color: #3d270b;
+                margin: 0 0 1em 0;
+                padding: 0.5em;
+            }
+            
+           
+        </style>
+        <script src="js/saxonjs3/SaxonJS3.rt.js"/>
+        <script>
+      window.onload = function() {
+        SaxonJS.transform({
+           "stylesheetLocation": "sef/linguistic-tree.sef.json",
+           "initialTemplate": "main"
+           })
+      }     
+      </script>
+    </head>
+    <body>
+        <div id="header">
+            <h1>Create syntax tree diagram</h1>
+        </div>
+        
+        <div id="options">
+            <button id="submit">Generate tree</button>
+            <br/>
+            <button id="download" onclick="download()">Download SVG</button>
+            <div>
+                <label for="height">Font-size:</label>
+                <input type="range" id="size" name="size" min="8" max="32" step="1" value="20"/>
+                <br/>
+                <label for="height">Height:</label>
+                <input type="range" id="height" name="height" min="35" max="70" step="1" value="40"/>
+                <br/>
+                <label for="width">Width:</label>
+                <input type="range" id="width" name="width" min="10" max="50" step="1" value="20"/>
+                <br/>
+                <button id="terminal-lines" class="active">Terminal lines</button>
+                
+            </div>
+            <div>
+                <h2>Line colour</h2>
+                <input type="radio" id="line-black" name="line-colour" value="black" checked="checked"/>
+                <label for="line-black">Black</label><br/>
+                <input type="radio" id="line-red" name="line-colour" value="red"/>
+                <label for="line-red">Red</label><br/>
+                <input type="radio" id="line-green" name="line-colour" value="green"/>
+                <label for="line-green">Green</label><br/>
+                <input type="radio" id="line-blue" name="line-colour" value="blue"/>
+                <label for="line-blue">Blue</label>
+            </div>
+            <div>
+                <h2>Font style</h2>
+                <button id="style-serif" class="active">Serif</button>
+                <button id="style-sansserif">Sans-serif</button>
+                <button id="style-monospace">Monospace</button>
+            </div>
+            <div>
+                <h2>Terminals</h2>
+                <button id="term-bold">Bold</button>
+                <button id="term-italic">Italic</button>
+                <br/>
+                <input type="radio" id="term-black" name="term-colour" value="black"/>
+                <label for="term-black">Black</label><br/>
+                <input type="radio" id="term-red" name="term-colour" value="red"/>
+                <label for="term-red">Red</label><br/>
+                <input type="radio" id="term-green" name="term-colour" value="green" checked="checked"/>
+                <label for="term-green">Green</label><br/>
+                <input type="radio" id="term-blue" name="term-colour" value="blue"/>
+                <label for="term-blue">Blue</label>
+            </div>
+            <div>
+                <h2>Non-terminals</h2>
+                <button id="nonterm-bold">Bold</button>
+                <button id="nonterm-italic">Italic</button>
+                <br/>
+                <input type="radio" id="nonterm-black" name="nonterm-colour" value="black"/>
+                <label for="nonterm-black">Black</label><br/>
+                <input type="radio" id="nonterm-red" name="nonterm-colour" value="red"/>
+                <label for="nonterm-red">Red</label><br/>
+                <input type="radio" id="nonterm-green" name="nonterm-colour" value="green"/>
+                <label for="nonterm-green">Green</label><br/>
+                <input type="radio" id="nonterm-blue" name="nonterm-colour" value="blue" checked="checked"/>
+                <label for="nonterm-blue">Blue</label>
+            </div>
+            
+            
+        </div>
+        
+        
+        
+        <!--<form id="get-tree">-->
+        <!--<textarea id="text-tree" cols="70" rows="15">[CP 
+                [C'
+                    [C \0]
+                    [TP
+                        [DP^ Sarah]
+                        [T'
+                            tT&lt;1>
+                            [VP 
+                                [V'
+                                    [AdvP [Adv' [Adv often]]]
+                                    [V'
+                                        [V+T_1 walk+{past}]
+                                        [DP^ home]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        </textarea>-->
+        
+        <textarea id="text-tree" cols="70" rows="15">[S 
+            [NP This] 
+            [VP 
+                [V is]
+                [^NP a wug]
+            ]
+        ]
+        </textarea>
+        <!--</form>-->
+        
+        <div class="svg" id="svg">
+            <svg xmlns="http://www.w3.org/2000/svg"
+                version="1.1" width="5cm" height="5cm">
+                <desc>Two groups, each of two rectangles</desc>
+                <g id="group1" fill="red">
+                    <rect x="1cm" y="1cm" width="1cm" height="1cm"/>
+                    <rect x="3cm" y="1cm" width="1cm" height="1cm"/>
+                </g>
+                <g id="group2" fill="blue">
+                    <rect x="1cm" y="3cm" width="1cm" height="1cm"/>
+                    <rect x="3cm" y="3cm" width="1cm" height="1cm"/>
+                </g>
+                
+                <!-- Show outline of canvas using 'rect' element -->
+                <rect x=".01cm" y=".01cm" width="4.98cm" height="4.98cm"
+                    fill="none" stroke="blue" stroke-width=".02cm"/>
+            </svg>
+        </div>
+        
+        
+        <h2>Notes</h2>
+        
+        <ul>
+            <li>Javascript must be enabled.</li>
+            <li>Append '&lt;1&gt;' for movement source.</li>
+            <li>Append '_1' for movement destination.</li>
+            <li>Append both for an item that is both source and destination.</li>
+            <li>You can use '\0' for 'Ø'.</li>
+            <li>If a value needs to have square brackets, use '{}' in place of '[]'.</li>
+            <li>For bug reports or feature suggestions, please contact me on BlueSky (mdunn1.bsky.social)</li>
+        </ul>
+        
+        
+        
+        <h2>Raw SVG</h2>
+        
+        <pre id="raw-svg"></pre>
+        
+        <h2>Intermediate XML structure</h2>
+         
+        <pre id="xml-tree"></pre>
+                    
+        <h2>Resources</h2>
+        
+        <ul>
+            <li>
+                <a href="https://github.com/mark-dunn/linguistic-tree">Source code (GitHub)</a>
+            </li>
+            <li>
+                <a href="https://www.svgviewer.dev/">SVG viewer</a> (paste and edit the raw SVG here)
+            </li>
+            <li>
+                <a href="https://editor.method.ac/">Method Draw (another SVG editor)</a>
+            </li>
+            <li>
+                <a href="https://www.w3.org/TR/SVG11/">SVG 1.1 spec (W3C)</a>
+            </li>
+            <li>
+                <a href="https://pressbooks.pub/syntax/"><i>The Science of Syntax</i> (John Gluckman)</a>
+            </li>
+            <li>
+                <a href="http://glottopedia.org/index.php/Labeled_bracketing">Labelled bracketing</a>
+            </li>
+            <li>
+                <a href="https://github.com/mshang/syntree/wiki">Miles Shang's syntree (Javascript tool)</a>
+            </li>
+            <li>
+                <a href="https://dprebyl.github.io/syntree">Drake Prebyl's fork of syntree</a>
+            </li>
+        </ul>
+        
+        
+    </body>
+</html>
