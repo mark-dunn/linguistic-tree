@@ -164,6 +164,13 @@
         <xsl:variable name="children-total-width" as="xs:double" select="$last-child-x + $last-child-width - $first-child-x"/>
         
         <xsl:choose>
+            <xsl:when test="count($children) = 1 and $first-child[self::dc:expression] and $width > $children-total-width">
+                <!-- 
+                    For a category with one line down to another (shorter) category,
+                    base x coordinate on mid point of child.
+                -->
+                <xsl:sequence select="$mid-x - $category/@width div 2"/>
+            </xsl:when>
             <xsl:when test="$width > $children-total-width">
                 <!-- 
                     For an extremely long category
@@ -307,6 +314,9 @@
         </xd:desc>
     </xd:doc>
     <xsl:template match="h:textarea[@id eq 'text-tree']" mode="ixsl:onkeyup">
+        <xsl:call-template name="draw-tree"/>
+    </xsl:template>
+    <xsl:template match="h:textarea[@id eq 'text-tree']" mode="ixsl:onchange">
         <xsl:call-template name="draw-tree"/>
     </xsl:template>
     

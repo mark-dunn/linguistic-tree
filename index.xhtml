@@ -3,49 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <title>Create syntax tree diagram</title>
-        <style type="text/css">
-            body {
-                background-color: #fff4e6;
-            }
-            
-            #options {
-                background-color: #fff8f0;
-                border: 2px solid #fabf73;
-                float: right;
-                padding: 0.5em;
-            }
-            
-            #options h2 {
-                background-color: #fff8f0;
-                color: #3d270b;
-                font-family: sans-serif;
-                font-size: 1.2em;
-                margin-top: 0.5em;
-                margin-bottom: 0.5em;
-            }
-            
-            #options > div {
-                border-top: 1px solid #fabf73;
-                margin-top: 1em;
-            }
-            
-            #submit, #download {
-                font-size: large;
-            }
-            
-            button.active {
-                background-color: #fce1bd
-            }
-            
-            #header {
-                background-color: #fce1bd;
-                color: #3d270b;
-                margin: 0 0 1em 0;
-                padding: 0.5em;
-            }
-            
-           
-        </style>
+        <link rel="stylesheet" type="text/css" href="css/style.css"/>
         <script src="js/saxonjs3/SaxonJS3.rt.js"/>
         <script>
       window.onload = function() {
@@ -128,111 +86,109 @@
         </div>
         
         
-        
-        <!--<form id="get-tree">-->
-        <!--<textarea id="text-tree" cols="70" rows="15">[CP 
-                [C'
-                    [C \0]
-                    [TP
-                        [DP^ Sarah]
-                        [T'
-                            tT&lt;1>
-                            [VP 
-                                [V'
-                                    [AdvP [Adv' [Adv often]]]
-                                    [V'
-                                        [V+T_1 walk+{past}]
-                                        [DP^ home]
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
-            ]
-        </textarea>-->
-        
-        <textarea id="text-tree" cols="70" rows="15">[S 
-            [NP This] 
-            [VP 
-                [V is]
-                [^NP a wug]
-            ]
-        ]
-        </textarea>
-        <!--</form>-->
-        
-        <div class="svg" id="svg">
-            <svg xmlns="http://www.w3.org/2000/svg"
-                version="1.1" width="5cm" height="5cm">
-                <desc>Two groups, each of two rectangles</desc>
-                <g id="group1" fill="red">
-                    <rect x="1cm" y="1cm" width="1cm" height="1cm"/>
-                    <rect x="3cm" y="1cm" width="1cm" height="1cm"/>
-                </g>
-                <g id="group2" fill="blue">
-                    <rect x="1cm" y="3cm" width="1cm" height="1cm"/>
-                    <rect x="3cm" y="3cm" width="1cm" height="1cm"/>
-                </g>
+        <div id="content">
+            
+            <textarea id="text-tree" cols="30" rows="10">[S 
+    [NP This] 
+    [VP 
+        [V is]
+        [^NP a wug]
+    ]
+]</textarea>
+            
+            <div id="svg-wrapper">
+                <h2>Syntax tree</h2>
                 
-                <!-- Show outline of canvas using 'rect' element -->
-                <rect x=".01cm" y=".01cm" width="4.98cm" height="4.98cm"
-                    fill="none" stroke="blue" stroke-width=".02cm"/>
-            </svg>
-        </div>
-        
-        
-        <h2>Notes</h2>
-        
-        <ul>
-            <li>Javascript must be enabled.</li>
-            <li>Append '&lt;1&gt;' for movement source.</li>
-            <li>Append '_1' for movement destination.</li>
-            <li>Append both for an item that is both source and destination.</li>
-            <li>You can use '\0' for 'Ø'.</li>
-            <li>If a value needs to have square brackets, use '{}' in place of '[]'.</li>
-            <li>For bug reports or feature suggestions, please contact me on BlueSky (mdunn1.bsky.social)</li>
-        </ul>
-        
-        
-        
-        <h2>Raw SVG</h2>
-        
-        <pre id="raw-svg"></pre>
-        
-        <h2>Intermediate XML structure</h2>
-         
-        <pre id="xml-tree"></pre>
-                    
-        <h2>Resources</h2>
-        
-        <ul>
-            <li>
-                <a href="https://github.com/mark-dunn/linguistic-tree">Source code (GitHub)</a>
-            </li>
-            <li>
-                <a href="https://www.svgviewer.dev/">SVG viewer</a> (paste and edit the raw SVG here)
-            </li>
-            <li>
-                <a href="https://editor.method.ac/">Method Draw (another SVG editor)</a>
-            </li>
-            <li>
-                <a href="https://www.w3.org/TR/SVG11/">SVG 1.1 spec (W3C)</a>
-            </li>
-            <li>
-                <a href="https://pressbooks.pub/syntax/"><i>The Science of Syntax</i> (John Gluckman)</a>
-            </li>
-            <li>
-                <a href="http://glottopedia.org/index.php/Labeled_bracketing">Labelled bracketing</a>
-            </li>
-            <li>
-                <a href="https://github.com/mshang/syntree/wiki">Miles Shang's syntree (Javascript tool)</a>
-            </li>
-            <li>
-                <a href="https://dprebyl.github.io/syntree">Drake Prebyl's fork of syntree</a>
-            </li>
-        </ul>
-        
-        
+                <div class="svg" id="svg">      
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        version="1.1" width="5cm" height="5cm">
+                        <desc>Two groups, each of two rectangles</desc>
+                        <g id="group1" fill="red">
+                            <rect x="1cm" y="1cm" width="1cm" height="1cm"/>
+                            <rect x="3cm" y="1cm" width="1cm" height="1cm"/>
+                        </g>
+                        <g id="group2" fill="blue">
+                            <rect x="1cm" y="3cm" width="1cm" height="1cm"/>
+                            <rect x="3cm" y="3cm" width="1cm" height="1cm"/>
+                        </g>
+                        
+                        <!-- Show outline of canvas using 'rect' element -->
+                        <rect x=".01cm" y=".01cm" width="4.98cm" height="4.98cm"
+                            fill="none" stroke="blue" stroke-width=".02cm"/>
+                    </svg>    
+                </div>
+            </div>
+            
+            <div id="notes">
+                <h2>Notes</h2>
+                
+                <ul>
+                    <li>Javascript must be enabled.</li>
+                    <li>Use <code>^</code> in a category label to draw a triangle instead of a line to the terminal item beneath it.</li>
+                    <li>Append <code>&lt;1&gt;</code> for movement source.</li>
+                    <li>Append <code>_1</code> for movement destination.</li>
+                    <li>Append both for an item that is both source and destination.</li>
+                    <li>You can use <code>\0</code> for <code>Ø</code>.</li>
+                    <li>If a value needs to have square brackets, use <code>{}</code> in place of <code>[]</code>.</li>
+                    <li>For bug reports or feature suggestions, please contact me on BlueSky (mdunn1.bsky.social)</li>
+                </ul>
+            </div>
+            
+             
+            <div id="raw-svg-wrapper">
+                <h2>Raw SVG</h2>
+                
+                <pre id="raw-svg"/>   
+            </div>
+            
+            <div id="intermediate-xml">    
+                <h2>Intermediate XML structure</h2>
+                
+                <pre id="xml-tree"/>
+            </div>
+            
+            <div id="examples">
+                <h2>Examples</h2>
+                <p>Click on the link to load example plain text and see the resulting syntax tree.</p>
+                
+                <ul>
+                    <li><a href="#" onclick="setPlaintext('1')">that Erin likes sushi surprised me</a></li>
+                    <li><a href="#" onclick="setPlaintext('2')">Sarah often walked home</a></li>
+                    <li><a href="#" onclick="setPlaintext('3')">Is Sarah eating fruit?</a></li>
+                </ul>
+            </div>
+            
+            <div id="resources">
+                <h2>Resources</h2>
+                
+                <ul>
+                    <li>
+                        <a href="https://github.com/mark-dunn/linguistic-tree">Source code (GitHub)</a>
+                    </li>
+                    <li>
+                        <a href="https://www.svgviewer.dev/">SVG viewer</a> (paste and edit the raw SVG here)
+                    </li>
+                    <li>
+                        <a href="https://editor.method.ac/">Method Draw (another SVG editor)</a>
+                    </li>
+                    <li>
+                        <a href="https://www.w3.org/TR/SVG11/">SVG 1.1 spec (W3C)</a>
+                    </li>
+                    <li>
+                        <a href="https://pressbooks.pub/syntax/"><i>The Science of Syntax</i> (John Gluckman)</a>
+                    </li>
+                    <li>
+                        <a href="http://glottopedia.org/index.php/Labeled_bracketing">Labelled bracketing</a>
+                    </li>
+                    <li>
+                        <a href="https://github.com/mshang/syntree/wiki">Miles Shang's syntree (Javascript tool)</a>
+                    </li>
+                    <li>
+                        <a href="https://dprebyl.github.io/syntree">Drake Prebyl's fork of syntree</a>
+                    </li>
+                </ul>
+            </div>
+            
+        </div> 
     </body>
 </html>
