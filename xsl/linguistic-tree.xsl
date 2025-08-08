@@ -907,7 +907,7 @@
         
         <xsl:choose>
             <xsl:when test="$preceding-sibling[self::dc:value]">
-                <xsl:message>[dc:get-prev] Adding preceding sibling value <xsl:value-of select="fn:serialize($preceding-sibling)"/></xsl:message>
+                <xsl:message use-when="$LOGLEVEL > 5">[dc:get-prev] Adding preceding sibling value <xsl:value-of select="fn:serialize($preceding-sibling)"/></xsl:message>
                 <xsl:sequence select="$preceding-sibling"/>
                 <xsl:if test="not($preceding-sibling/@arrow-end = $arrow-label or $preceding-sibling/parent::dc:values/preceding-sibling::dc:category/@arrow-end = $arrow-label)">
                     <xsl:sequence select="dc:get-prev($preceding-sibling,$arrow-label)"/>
@@ -915,7 +915,7 @@
             </xsl:when>
             <xsl:when test="$preceding-sibling[self::dc:expression]">
                 <xsl:variable name="prec" as="element(dc:value)" select="($preceding-sibling//dc:value)[last()]"/>
-                <xsl:message>[dc:get-prev] Adding preceding value from preceding sibling expression <xsl:value-of select="fn:serialize($prec)"/></xsl:message>
+                <xsl:message use-when="$LOGLEVEL > 5">[dc:get-prev] Adding preceding value from preceding sibling expression <xsl:value-of select="fn:serialize($prec)"/></xsl:message>
                 <xsl:sequence select="$prec"/>
                 <xsl:if test="not($prec/@arrow-end = $arrow-label or $prec/parent::dc:values/preceding-sibling::dc:category/@arrow-end = $arrow-label)">
                     <xsl:sequence select="dc:get-prev($prec,$arrow-label)"/>
@@ -945,7 +945,7 @@
         
         <xsl:choose>
             <xsl:when test="$following-sibling[self::dc:value]">
-                <xsl:message>[dc:get-next] Adding following sibling value <xsl:value-of select="fn:serialize($following-sibling)"/></xsl:message>
+                <xsl:message use-when="$LOGLEVEL > 5">[dc:get-next] Adding following sibling value <xsl:value-of select="fn:serialize($following-sibling)"/></xsl:message>
                 <xsl:sequence select="$following-sibling"/>
                 <xsl:if test="not($following-sibling/@arrow-end or $following-sibling/parent::dc:values/preceding-sibling::dc:category/@arrow-end = $arrow-label)">
                     <xsl:sequence select="dc:get-next($following-sibling,$arrow-label)"/>
@@ -953,7 +953,7 @@
             </xsl:when>
             <xsl:when test="$following-sibling[self::dc:expression]">
                 <xsl:variable name="next" as="element(dc:value)" select="($following-sibling//dc:value)[1]"/>
-                <xsl:message>[dc:get-next] Adding following value from following sibling expression <xsl:value-of select="fn:serialize($next)"/></xsl:message>
+                <xsl:message use-when="$LOGLEVEL > 5">[dc:get-next] Adding following value from following sibling expression <xsl:value-of select="fn:serialize($next)"/></xsl:message>
                 <xsl:sequence select="$next"/>
                 <xsl:if test="not($next/@arrow-end = $arrow-label or $next/parent::dc:values/preceding-sibling::dc:category/@arrow-end = $arrow-label)">
                     <xsl:sequence select="dc:get-next($next,$arrow-label)"/>
