@@ -797,7 +797,7 @@
         </xd:desc>
     </xd:doc>
     <xsl:template match="dc:category/@arrow-end" mode="draw-text">
-        <tspan class="subscript" dy="0.4em" baseline-shift="sub">
+        <tspan class="subscript" dy="0.4em">
             <xsl:value-of select="."/>
         </tspan>
     </xsl:template>
