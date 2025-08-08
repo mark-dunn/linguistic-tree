@@ -26,7 +26,7 @@
             <xd:p>Inspired by Miles Shang's <xd:a href="https://mshang.ca/syntree/">syntree</xd:a> Javascript tool.</xd:p>
             <xd:p><xd:a href="https://www.w3.org/TR/SVG11/">SVG 1.1 spec</xd:a></xd:p>
             <xd:p><xd:b>NOTE:</xd:b> +++++ Don't forget to compile the stylesheet after making changes +++++</xd:p>
-            <xd:p>sh /Users/mark/Sites/datacraft/linguistics/dev/compile-xsl.sh</xd:p>
+            <xd:p>sh /Users/mark/GitHub/linguistic-tree/compile-xsl.sh</xd:p>
         </xd:desc>
     </xd:doc>
     
@@ -473,6 +473,7 @@
             </xsl:apply-templates>
         </xsl:variable>
         
+        
         <!-- 
             Add a base level for the arc of each arrow,
             by identifying the intervening values, 
@@ -490,6 +491,12 @@
                 <xsl:with-param name="font-size" as="xs:integer" select="$font-size" tunnel="yes"/>
             </xsl:apply-templates>
         </xsl:variable>
+        
+        <xsl:message use-when="$LOGLEVEL ge 5">[draw-tree] Intermediate XML:
+            <xsl:sequence select="fn:serialize($parsed-tree-arrow-coordinates,map{'indent':true()})"/>
+        </xsl:message>
+        
+       
         
         <!-- 
             Now that we have all the y coordinates,
@@ -666,7 +673,10 @@
                 <xsl:sequence select="'none'"/>
             </xsl:when>
             <xsl:otherwise>
-                
+                <xsl:variable name="focus-next-item" as="element(dc:value)" select="dc:get-arrow-end($focus-item)"/>
+                <xsl:variable name="focus-x" as="xs:double" select="$focus-item/@x"/>
+                <xsl:variable name="focus-next-x" as="xs:double" select="$focus-next-item/@x"/>
+                <xsl:variable name="focus-prev-x" as="xs:double" select="$focus-prev-item/@x"/>
                 <xsl:variable name="arrow-out-direction" as="xs:string" select="$focus-item/@arrow-direction"/>
                 <xsl:variable name="arrow-in-direction" as="xs:string" select="$focus-prev-item/@arrow-direction"/>
                 <xsl:variable name="arrow-out-bottom" as="xs:string" select="$focus-item/@arrow-bottom-y"/>
@@ -680,16 +690,16 @@
                         <xsl:when test="$arrow-out-direction eq 'right' and $arrow-in-direction eq 'right'">
                             <xsl:sequence select="'right'"/>
                         </xsl:when>
-                        <xsl:when test="$arrow-out-direction eq 'left' and $arrow-in-direction eq 'right' and $arrow-out-bottom > $arrow-in-bottom">
+                        <xsl:when test="$arrow-out-direction eq 'left' and $arrow-in-direction eq 'right' and ($arrow-out-bottom > $arrow-in-bottom or $focus-next-x &lt; $focus-prev-x)">
                             <xsl:sequence select="'right'"/>
                         </xsl:when>
-                        <xsl:when test="$arrow-out-direction eq 'left' and $arrow-in-direction eq 'right' and $arrow-out-bottom &lt; $arrow-in-bottom">
+                        <xsl:when test="$arrow-out-direction eq 'left' and $arrow-in-direction eq 'right' and ($arrow-out-bottom &lt; $arrow-in-bottom or $focus-next-x > $focus-prev-x)">
                             <xsl:sequence select="'left'"/>
                         </xsl:when>
-                        <xsl:when test="$arrow-out-direction eq 'right' and $arrow-in-direction eq 'left' and $arrow-out-bottom > $arrow-in-bottom">
+                        <xsl:when test="$arrow-out-direction eq 'right' and $arrow-in-direction eq 'left' and ($arrow-out-bottom > $arrow-in-bottom or $focus-next-x > $focus-prev-x)">
                             <xsl:sequence select="'left'"/>
                         </xsl:when>
-                        <xsl:when test="$arrow-out-direction eq 'right' and $arrow-in-direction eq 'left' and $arrow-out-bottom &lt; $arrow-in-bottom">
+                        <xsl:when test="$arrow-out-direction eq 'right' and $arrow-in-direction eq 'left' and ($arrow-out-bottom &lt; $arrow-in-bottom or $focus-next-x &lt; $focus-prev-x)">
                             <xsl:sequence select="'right'"/>
                         </xsl:when>
                     </xsl:choose>
@@ -845,7 +855,13 @@
             </xsl:choose>
         </xsl:variable>
         
-        <xsl:variable name="bottom-y" as="xs:double" select="max(($intervening-values|..)/@y) + $vert-space"/>
+        <!-- 
+            Add enough space below the lowest value 
+            to try to ensure the arrow clears it
+        -->
+        <xsl:variable name="bottom-y" as="xs:double" select="max(($intervening-values|..)/@y) + (1.5 * $vert-space)"/>
+        <xsl:message use-when="$LOGLEVEL ge 5">[add-arrow-coordinates] Number of items to end of arrow: <xsl:value-of select="count($intervening-values)"/></xsl:message>
+        <xsl:message use-when="$LOGLEVEL ge 5">[add-arrow-coordinates] Bottom of arc: <xsl:value-of select="$bottom-y"/></xsl:message>
         <xsl:attribute name="arrow-bottom-y" select="$bottom-y"/>
         <xsl:attribute name="arrow-direction" select="$direction"/>
     </xsl:template>
@@ -891,15 +907,17 @@
         
         <xsl:choose>
             <xsl:when test="$preceding-sibling[self::dc:value]">
+                <xsl:message>[dc:get-prev] Adding preceding sibling value <xsl:value-of select="fn:serialize($preceding-sibling)"/></xsl:message>
                 <xsl:sequence select="$preceding-sibling"/>
-                <xsl:if test="not($preceding-sibling/parent::dc:values/preceding-sibling::dc:category/@arrow-end = $arrow-label)">
+                <xsl:if test="not($preceding-sibling/@arrow-end = $arrow-label or $preceding-sibling/parent::dc:values/preceding-sibling::dc:category/@arrow-end = $arrow-label)">
                     <xsl:sequence select="dc:get-prev($preceding-sibling,$arrow-label)"/>
                 </xsl:if>
             </xsl:when>
             <xsl:when test="$preceding-sibling[self::dc:expression]">
                 <xsl:variable name="prec" as="element(dc:value)" select="($preceding-sibling//dc:value)[last()]"/>
+                <xsl:message>[dc:get-prev] Adding preceding value from preceding sibling expression <xsl:value-of select="fn:serialize($prec)"/></xsl:message>
                 <xsl:sequence select="$prec"/>
-                <xsl:if test="not($prec/parent::dc:values/preceding-sibling::dc:category/@arrow-end = $arrow-label)">
+                <xsl:if test="not($prec/@arrow-end = $arrow-label or $prec/parent::dc:values/preceding-sibling::dc:category/@arrow-end = $arrow-label)">
                     <xsl:sequence select="dc:get-prev($prec,$arrow-label)"/>
                 </xsl:if>
             </xsl:when>
@@ -927,15 +945,17 @@
         
         <xsl:choose>
             <xsl:when test="$following-sibling[self::dc:value]">
+                <xsl:message>[dc:get-next] Adding following sibling value <xsl:value-of select="fn:serialize($following-sibling)"/></xsl:message>
                 <xsl:sequence select="$following-sibling"/>
-                <xsl:if test="not($following-sibling/parent::dc:values/preceding-sibling::dc:category/@arrow-end = $arrow-label)">
+                <xsl:if test="not($following-sibling/@arrow-end or $following-sibling/parent::dc:values/preceding-sibling::dc:category/@arrow-end = $arrow-label)">
                     <xsl:sequence select="dc:get-next($following-sibling,$arrow-label)"/>
                 </xsl:if>
             </xsl:when>
             <xsl:when test="$following-sibling[self::dc:expression]">
                 <xsl:variable name="next" as="element(dc:value)" select="($following-sibling//dc:value)[1]"/>
+                <xsl:message>[dc:get-next] Adding following value from following sibling expression <xsl:value-of select="fn:serialize($next)"/></xsl:message>
                 <xsl:sequence select="$next"/>
-                <xsl:if test="not($next/parent::dc:values/preceding-sibling::dc:category/@arrow-end = $arrow-label)">
+                <xsl:if test="not($next/@arrow-end = $arrow-label or $next/parent::dc:values/preceding-sibling::dc:category/@arrow-end = $arrow-label)">
                     <xsl:sequence select="dc:get-next($next,$arrow-label)"/>
                 </xsl:if>
             </xsl:when>
