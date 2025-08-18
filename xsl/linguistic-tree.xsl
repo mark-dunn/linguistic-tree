@@ -34,10 +34,11 @@
     
     <xsl:mode name="add-widths" on-no-match="shallow-copy"/>
     <xsl:mode name="add-text-coordinates" on-no-match="shallow-copy"/>
+    <xsl:mode name="add-expression-widths" on-no-match="shallow-copy"/>
     <xsl:mode name="add-expression-coordinates" on-no-match="shallow-copy"/>
     <xsl:mode name="add-arrow-coordinates" on-no-match="shallow-copy"/>
     
-    <xsl:variable static="yes" name="LOGLEVEL" as="xs:integer" select="0"/>
+    <xsl:variable static="yes" name="LOGLEVEL" as="xs:integer" select="5"/>
         
     <xsl:variable name="page" as="document-node()" select="ixsl:page()"/>
     
@@ -48,7 +49,7 @@
     
     
     <!-- [category value] -->
-    <xsl:variable name="expression-regex" as="xs:string" select="'^\s*\[\s*([^\s]+)\s+([\s\S]+)\s*\]\s*$'"/>
+    <xsl:variable name="expression-regex" as="xs:string" select="'^\s*\[\s*([^\[\]]*?[^\\])\s+([\s\S]+)\s*\]\s*$'"/>
     
     <!-- [category ...] ...
         OR value ... [
@@ -58,7 +59,7 @@
         so we move past nested expressions 
         to the matching ']'
     -->
-    <xsl:variable name="expression-candidate" as="xs:string" select="'^\s*(\[\s*[^\s]+\s+[^\]]+\s*\]|[^\[\]]+\s*\[)([\s\S]*)$'"/>
+    <xsl:variable name="expression-candidate" as="xs:string" select="'^\s*(\[\s*[^\[\]]*?[^\\]\s+[^\]]+\s*\]|[^\[\]]+\s*\[)([\s\S]*)$'"/>
     
     <xd:doc scope="component">
         <xd:desc>
@@ -91,13 +92,43 @@
         
         <xsl:variable name="parent-expression" as="element(dc:expression)?" select="$expression/parent::dc:values/parent::dc:expression"/>
         <xsl:variable name="preceding" as="element()*" select="$expression/preceding-sibling::*"/>
+        <xsl:variable name="following" as="element()*" select="$expression/following-sibling::*"/>    
+        <xsl:variable name="row" as="element()+" select="($preceding,$expression,$following)"/>
         
+        <xsl:variable name="row-item-widths" as="xs:double*">
+            <xsl:for-each select="$row">
+                <xsl:value-of select="@width"/>
+            </xsl:for-each>
+        </xsl:variable>
+        <xsl:variable name="row-total-width" as="xs:double" select="sum($row-item-widths) + $hor-space * (count($row) -1)"/>
+               
         <xsl:variable name="preceding-x-additions" as="xs:double*">
             <xsl:for-each select="$preceding">
                 <xsl:sequence select="dc:get-width(.,$hor-space) + $hor-space"/>
             </xsl:for-each>
         </xsl:variable>
+        
         <xsl:choose>
+            <!-- 
+                First child of a very long category:
+                Base x on mid-point of parent
+            -->
+            <xsl:when test="exists($parent-expression) and not($preceding) and $row-total-width lt xs:double($parent-expression/@width)">
+                <xsl:sequence select="dc:get-expression-x($parent-expression,$hor-space) + ($parent-expression/@width div 2) - ($row-total-width div 2)"/>
+                
+            </xsl:when>
+            <!-- 
+                Other children of a very long category:
+                Base x on x of first child
+            -->
+            <xsl:when test="exists($parent-expression) and exists($preceding) and $row-total-width lt xs:double($parent-expression/@width)">
+                <xsl:sequence select="dc:get-expression-x($preceding[last()],$hor-space) + sum($preceding-x-additions)"/>
+                
+            </xsl:when>
+            <!-- 
+                Children of a short category:
+                Base x on x of parent expression and width of preceding children
+            -->
             <xsl:when test="exists($parent-expression)">
                 <xsl:sequence select="dc:get-expression-x($parent-expression,$hor-space) + sum($preceding-x-additions)"/>
             </xsl:when>
@@ -271,8 +302,8 @@
         <xsl:variable name="children" as="element()+" select="$expression/dc:values/*"/>
         
         <xsl:variable name="child-widths" as="xs:double+" select="for $c in $children return dc:get-width($c,$hor-space)"/>
-        
-        <xsl:variable name="children-total-width" as="xs:double" select="sum($child-widths) + $hor-space * (count($children) - 1)"/>
+                
+        <xsl:variable name="children-total-width" as="xs:double" select="sum($child-widths) + $hor-space * (count($children) - 1)"/>        
         
         <xsl:sequence select="max(($category-width,$children-total-width))"/>
         
@@ -431,12 +462,11 @@
             </xsl:apply-templates>
         </xsl:variable>
         
-        <xsl:variable name="image-width" select="dc:get-expression-width($parsed-tree-widths,$horizontal-space) + (2 * $margin-x)"/>
         
         <!--<xsl:message>[draw-tree] Image width = <xsl:sequence select="$image-width"/></xsl:message>-->
         
         <!-- 
-            Add coordinates and widths for the expressions [category value+]
+            Add widths for the expressions [category value+]
             
             We process the XML from the top down,
             but the width of an expression is derived from the widths 
@@ -448,9 +478,26 @@
             The logic means that the function is called multiple times
             on a lower-level expression, once when calculating its own width
             and also each time we are calculating the width of an ancestor expression.
+
+        -->
+        <xsl:variable name="parsed-tree-expression-widths" as="element(dc:expression)?">
+            <xsl:apply-templates select="$parsed-tree-widths" mode="add-expression-widths">
+                <xsl:with-param name="hor-space" as="xs:integer" select="$horizontal-space" tunnel="yes"/>
+                <xsl:with-param name="vert-space" as="xs:integer" select="$vertical-space" tunnel="yes"/>
+                <xsl:with-param name="font-size" as="xs:integer" select="$font-size" tunnel="yes"/>
+            </xsl:apply-templates>
+        </xsl:variable>
+        
+        
+        <xsl:variable name="image-width" select="$parsed-tree-expression-widths/@width + (2 * $margin-x)"/>
+        
+        
+        <!-- 
+            Add coordinates for the expressions [category value+]
+            
         -->
         <xsl:variable name="parsed-tree-expression-coordinates" as="element(dc:expression)?">
-            <xsl:apply-templates select="$parsed-tree-widths" mode="add-expression-coordinates">
+            <xsl:apply-templates select="$parsed-tree-expression-widths" mode="add-expression-coordinates">
                 <xsl:with-param name="hor-space" as="xs:integer" select="$horizontal-space" tunnel="yes"/>
                 <xsl:with-param name="vert-space" as="xs:integer" select="$vertical-space" tunnel="yes"/>
                 <xsl:with-param name="font-size" as="xs:integer" select="$font-size" tunnel="yes"/>
@@ -521,7 +568,7 @@
         -->        
         <xsl:variable name="svg" as="element(svg:svg)">
             <svg
-                version="1.1" width="{$image-width}" height="{$image-height}" style="background-color:white">
+                version="1.1" width="{$image-width}" height="{$image-height}">
                 <desc>Syntax tree diagram generated at https://linguistics.datacraft.co.uk/</desc>
                 
                 <style type="text/css">
@@ -539,7 +586,7 @@
                     }
                     tspan.subscript {font-size:smaller}
                 </style>
-                
+                <rect width="100%" height="100%" fill="white" />
                 <xsl:apply-templates select="$parsed-tree-arrow-coordinates//*[self::dc:category or self::dc:value]" mode="draw-text">
                     <xsl:with-param name="vert-space" as="xs:integer" select="$vertical-space" tunnel="yes"/>
                     <xsl:with-param name="term-colour" as="xs:string" select="$term-colour"/>
@@ -1006,11 +1053,27 @@
     
     <xd:doc scope="component">
         <xd:desc>
+            <xd:p>Add width to expression in tree.</xd:p>
+            <xd:p>Width of expression is derived from width of items within it. The function dc:get-expression-width() is called recursively with dc:get-width() to achieve this.</xd:p>
+        </xd:desc>
+        <xd:param name="hor-space">Amount of horizontal space between expressions/values.</xd:param>
+    </xd:doc>
+    <xsl:template match="dc:expression" mode="add-expression-widths">
+        <xsl:param name="hor-space" as="xs:integer" tunnel="yes"/>
+        
+        <xsl:copy>
+            <xsl:attribute name="width" select="dc:get-expression-width(.,$hor-space)"/>
+            <xsl:apply-templates select="@*,child::node()" mode="#current"/>
+        </xsl:copy>
+    </xsl:template>
+    
+    <xd:doc scope="component">
+        <xd:desc>
             <xd:p>Add x and y coordinates to expression in tree.</xd:p>
             <xd:p>x and y are measured from top left, going right and down respectively.</xd:p>
             <xd:p>x position of expression = x position of parent expression + width of preceding sibling expressions/values + horizontal spaces.</xd:p>
+            <xd:p>(With a finesse if the expression has no siblings and is narrower than its parent.)</xd:p>
             <xd:p>x position of top expression is left margin.</xd:p>
-            <xd:p>Width of expression is derived from width of items within it. The function dc:get-expression-width() is called recursively with dc:get-width() to achieve this.</xd:p>
         </xd:desc>
         <xd:param name="hor-space">Amount of horizontal space between expressions/values.</xd:param>
         <xd:param name="vert-space">Amount of vertical space between rows of expressions/values.</xd:param>
@@ -1024,11 +1087,10 @@
         <xsl:copy>
             <xsl:attribute name="x" select="dc:get-expression-x(.,$hor-space)"/>
             <xsl:attribute name="y" select="dc:get-expression-y(.,$vert-space,$font-size)"/>
-            <xsl:attribute name="width" select="dc:get-expression-width(.,$hor-space)"/>
             <xsl:apply-templates select="@*,child::node()" mode="#current"/>
         </xsl:copy>
     </xsl:template>
-    
+
     <xd:doc scope="component">
         <xd:desc>
             <xd:p>Add width to category in tree.</xd:p>
