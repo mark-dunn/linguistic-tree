@@ -38,7 +38,7 @@
     <xsl:mode name="add-expression-coordinates" on-no-match="shallow-copy"/>
     <xsl:mode name="add-arrow-coordinates" on-no-match="shallow-copy"/>
     
-    <xsl:variable static="yes" name="LOGLEVEL" as="xs:integer" select="5"/>
+    <xsl:variable static="yes" name="LOGLEVEL" as="xs:integer" select="1"/>
         
     <xsl:variable name="page" as="document-node()" select="ixsl:page()"/>
     
@@ -584,7 +584,7 @@
                         font-weight: <xsl:sequence select="if ($nonterm-font-weight) then 'bold' else ('normal')"/>;
                         font-style: <xsl:sequence select="if ($nonterm-font-style) then 'italic' else ('normal')"/>;
                     }
-                    tspan.subscript {font-size:smaller}
+                    tspan.subscript, tspan.superscript {font-size:smaller}
                 </style>
                 <rect width="100%" height="100%" fill="white" />
                 <xsl:apply-templates select="$parsed-tree-arrow-coordinates//*[self::dc:category or self::dc:value]" mode="draw-text">
@@ -778,7 +778,7 @@
         <text x="{@x}" y="{@y}" class="{$text-class}" fill="{$text-colour}">
             <xsl:apply-templates select="child::node()" mode="#current"/>
             <xsl:if test="self::dc:category">
-                <xsl:apply-templates select="@arrow-end" mode="#current"/>
+                <xsl:apply-templates select="@superscript,@arrow-end" mode="#current"/>
             </xsl:if>
         </text>
         
@@ -840,7 +840,7 @@
     <xd:doc scope="component">
         <xd:desc>
             <xd:p>Render arrow-end marker (on dc:category) as subscript.</xd:p>
-            <xd:p>The @dy and @baseline-shift attributes attempt to do the same thing. @baseline-shift is nore correct but not supported in Firefox browsers.</xd:p>
+            <xd:p>The @dy attribute attempts to do the same thing. @baseline-shift is more correct but not supported in Firefox browsers.</xd:p>
         </xd:desc>
     </xd:doc>
     <xsl:template match="dc:category/@arrow-end" mode="draw-text">
@@ -849,6 +849,18 @@
         </tspan>
     </xsl:template>
     
+    <xd:doc scope="component">
+        <xd:desc>
+            <xd:p>Render superscript digit (on dc:category) as superscript.</xd:p>
+            <xd:p>The @dy attribute attempts to do the same thing. @baseline-shift is more correct but not supported in Firefox browsers.</xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:template match="dc:category/@superscript" mode="draw-text">
+        <tspan class="superscript" dy="-0.4em">
+            <xsl:value-of select="."/>
+        </tspan>
+    </xsl:template>
+
     <xd:doc scope="component">
         <xd:desc>
             <xd:p>Add x and y coordinates to category in tree.</xd:p>
@@ -1277,18 +1289,24 @@
     </xd:doc>
     <xsl:function name="dc:get-category" as="element()">
         <xsl:param name="category" as="xs:string"/>
-        <xsl:variable name="has-triangle" as="xs:boolean" select="contains($category,'^')"/>
-        <xsl:variable name="category-parsed-1" as="xs:string" select="translate($category,'\^','')"/>
+        <xsl:variable name="has-triangle" as="xs:boolean" select="matches($category,'^\^')"/>
+        <xsl:variable name="category-parsed-1" as="xs:string" select="replace($category,'^\^','')"/>
         <xsl:variable name="arrow-end" as="xs:string?" select="fn:substring-after($category-parsed-1,'_')"/>
         <xsl:variable name="category-parsed-2" as="xs:string" select="if ($arrow-end) then fn:substring-before($category-parsed-1,'_') else $category-parsed-1"/>
+        <xsl:variable name="superscript" as="xs:string?" select="if (matches($category-parsed-2,'\^\d+$')) then fn:substring-after($category-parsed-2,'^') else ()"/>
+        <xsl:variable name="category-parsed-3" as="xs:string" select="if ($superscript) then fn:substring-before($category-parsed-2,'^') else $category-parsed-2"/>
+        
         <dc:category>
             <xsl:if test="$has-triangle">
                 <xsl:attribute name="triangle" select="'yes'"/>
             </xsl:if>
+            <xsl:if test="$superscript">
+                <xsl:attribute name="superscript" select="$superscript"/>
+            </xsl:if>
             <xsl:if test="$arrow-end">
                 <xsl:attribute name="arrow-end" select="$arrow-end"/>
             </xsl:if>
-            <xsl:sequence select="$category-parsed-2"/>
+            <xsl:sequence select="$category-parsed-3"/>
         </dc:category>
     </xsl:function>
     
